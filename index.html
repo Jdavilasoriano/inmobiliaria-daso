@@ -212,13 +212,7 @@ section{padding-block:128px}
 .estate-media{min-width:0;display:grid;gap:14px}
 .frame{position:relative;aspect-ratio:16/10;max-width:100%;border-radius:22px;overflow:hidden;background:#2B241D}
 .frame img{width:100%;height:100%;object-fit:cover;transition:opacity .5s}
-.sat{position:absolute;inset:0;z-index:1;overflow:hidden;background:#3E4A3F}
-.sat-tiles img{position:absolute;max-width:none;display:block}
-.sat>svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-.sat-pin{position:absolute;left:50%;top:50%;transform:translate(-50%,-150%);background:var(--ink);color:#fff;font-family:var(--f-display);font-weight:700;font-size:14px;padding:7px 12px;border-radius:999px;white-space:nowrap;box-shadow:0 8px 20px -8px rgba(0,0,0,.6)}
-.sat-3d{position:absolute;right:14px;bottom:14px;padding:10px 16px;font-size:14px}
-.sat-attr{position:absolute;left:12px;bottom:10px;font-size:11px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.8)}
-.frame .tag{z-index:2;position:absolute;top:16px;left:16px;background:rgba(30,24,18,.72);color:#F5EFE6;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:7px 11px;border-radius:6px;backdrop-filter:blur(4px)}
+.frame .tag{position:absolute;top:16px;left:16px;background:rgba(30,24,18,.72);color:#F5EFE6;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:7px 11px;border-radius:6px;backdrop-filter:blur(4px)}
 .frame .ref{position:absolute;right:14px;bottom:12px;font-family:var(--f-mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#fff;background:rgba(30,24,18,.45);padding:5px 9px;border-radius:5px}
 .views{display:flex;gap:24px;border-bottom:1px solid var(--line);overflow-x:auto}
 .views button{background:none;border:0;padding:10px 0 12px;font-size:14px;color:var(--muted);position:relative;white-space:nowrap}
@@ -1029,26 +1023,11 @@ $("#picks").innerHTML=PROPS.map(p=>`
 /* =========================================================
    FICHAS de cada terreno
    ========================================================= */
-const VIEWS=p=>[["photo","Foto"],["sat","Ubicación"],["photo2",p.photo2],["day","Maqueta 3D"],["aerial","Vista aérea"],["plan","Plano"]];
-// vista satelital del terreno: mosaico de Esri (zoom 17) con el contorno real o un marcador
-function satHTML(p){
-  const z=17, T=256*2**z, span=p.boundary?430:620;                 // metros visibles a lo ancho
-  const gx=lon=>(lon+180)/360*T, gy=lat=>{ const r=lat*Math.PI/180; return (1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*T; };
-  const mpp=156543.03392*Math.cos(p.lat*Math.PI/180)/2**z, sx=span/mpp, sy=sx*10/16, x0=gx(p.lng)-sx/2, y0=gy(p.lat)-sy/2;
-  let h="";
-  for(let tx=Math.floor(x0/256);tx<=Math.floor((x0+sx)/256);tx++) for(let ty=Math.floor(y0/256);ty<=Math.floor((y0+sy)/256);ty++)
-    h+=`<img alt="" loading="lazy" src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${ty}/${tx}" style="left:${((tx*256-x0)/sx*100).toFixed(3)}%;top:${((ty*256-y0)/sy*100).toFixed(3)}%;width:${(256/sx*100).toFixed(3)}%;height:${(256/sy*100).toFixed(3)}%">`;
-  let ov=`<svg viewBox="0 0 ${sx.toFixed(1)} ${sy.toFixed(1)}" preserveAspectRatio="none">`;
-  if(p.boundary) ov+=`<polygon points="${p.boundary.map(([la,lo])=>(gx(lo)-x0).toFixed(1)+","+(gy(la)-y0).toFixed(1)).join(" ")}" fill="#E6C27A" fill-opacity=".38" stroke="#FFE3A6" stroke-width="2.4" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>`;
-  else ov+=`<circle cx="${(sx/2).toFixed(1)}" cy="${(sy/2).toFixed(1)}" r="${(28/mpp).toFixed(1)}" fill="#E6C27A" fill-opacity=".32" stroke="#FFE3A6" stroke-width="2.4" vector-effect="non-scaling-stroke"/>`;
-  ov+=`</svg>`;
-  return `<div class="sat-tiles">${h}</div>${ov}<span class="sat-pin">${nTxt(p)} · ${esc(p.short)}</span>
-    <button class="btn btn-light sat-3d" type="button" data-map="${p.id}"><svg><use href="#i-cube"/></svg>Explorar en 3D</button><span class="sat-attr">Imagen satelital: Esri, Maxar</span>`;
-}
+const VIEWS=p=>[["photo","Foto"],["photo2",p.photo2],["day","Maqueta 3D"],["aerial","Vista aérea"],["plan","Plano"]];
 $("#estates").innerHTML=PROPS.map(p=>`
   <article class="estate" id="${p.id}" data-loc="${p.city}" data-kind="${p.kind}">
     <div class="estate-media">
-      <div class="frame"><div class="sat" hidden></div><img data-img="${p.id}:photo" src="${IMG[p.id].photo}" alt="Imagen del terreno ${esc(p.title)}"><span class="tag">${esc(p.tag)}</span><span class="ref">Foto referencial</span></div>
+      <div class="frame"><img data-img="${p.id}:photo" src="${IMG[p.id].photo}" alt="Imagen del terreno ${esc(p.title)}"><span class="tag">${esc(p.tag)}</span><span class="ref">Foto referencial</span></div>
       <div class="views" role="tablist">${VIEWS(p).map(([k,l],i)=>`<button type="button" role="tab" aria-selected="${!i}" class="${i?"":"on"}" data-view="${p.id}:${k}">${l}</button>`).join("")}</div>
     </div>
     <div class="estate-info">
@@ -1079,10 +1058,7 @@ document.addEventListener("click",e=>{
   const v=e.target.closest("[data-view]");
   if(v){ const [id,k]=v.dataset.view.split(":"), art=document.getElementById(id), img=art.querySelector(".frame img");
     art.querySelectorAll("[data-view]").forEach(b=>{ b.classList.toggle("on",b===v); b.setAttribute("aria-selected",b===v); });
-    const sat=art.querySelector(".sat"), P=PROPS.find(q=>q.id===id);
-    art.querySelector(".ref").hidden=!k.startsWith("photo");
-    if(k==="sat"){ if(!sat.dataset.ready){ sat.innerHTML=satHTML(P); sat.dataset.ready="1"; } sat.hidden=false; img.style.opacity=0; return; }
-    sat.hidden=true; img.style.opacity=0; setTimeout(()=>{ img.dataset.img=`${id}:${k}`; img.src=IMG[id][k]; img.style.opacity=1; },220); return; }
+    img.style.opacity=0; art.querySelector(".ref").hidden=!k.startsWith("photo"); setTimeout(()=>{ img.dataset.img=`${id}:${k}`; img.src=IMG[id][k]; img.style.opacity=1; },220); return; }
   const m=e.target.closest("[data-map]"); if(m){ selectProp(m.dataset.map,true); $("#mapa").scrollIntoView({behavior:"smooth"}); }
 });
 document.querySelectorAll('[data-wa="general"]').forEach(a=>a.href=waLink(DASO.agents[0].number,"Hola DASO, quisiera información sobre sus terrenos en Barranca."));
