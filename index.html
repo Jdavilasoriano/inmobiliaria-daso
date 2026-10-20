@@ -686,11 +686,17 @@ const waLink = (num, text) => `https://wa.me/${num}?text=${encodeURIComponent(te
 const PROPS = [
   { id:"DASO-B01", scene:"playa", kind:"Playa", city:"Barranca", region:"Lima",
     title:"Terreno de playa en Chorrillos, Barranca", short:"Playa Chorrillos",
-    zone:"Playa Chorrillos · Av. Costanera, Barranca", lat:-10.7633929, lng:-77.7611480,
-    price:98000, front:15, depth:30, tag:"Frente al mar", photos:["img/b01-1.jpg","img/b02-1.jpg"], photo2:"La orilla",
-    desc:"En la Playa Chorrillos de Barranca, al pie del acantilado y con vista abierta al Pacífico. Para casa de playa, restaurante u hospedaje en una de las playas más concurridas de la ciudad.",
-    specs:[["Área","450 m²"],["Frente × fondo","15 × 30 m"],["Uso","Vivienda / comercio"],["Al mar","A pie de playa"]],
-    near:[["Orilla del mar","~40 m"],["Plaza de Armas de Barranca","~1.5 km"],["Panamericana Norte","~3 km"],["Lima","~190 km"]] },
+    zone:"Entre Av. del Ejército y Av. Chorrillos · Playa Chorrillos, Barranca", lat:-10.7601963, lng:-77.7641231,
+    price:98000, front:40, depth:60, tag:"A 90 m de la playa", photos:["img/b01-1.jpg","img/b02-1.jpg"], photo2:"La orilla",
+    desc:"Terreno de 2,382.71 m² a unos 90 m de la Playa Chorrillos, con dos frentes: 66.70 m sobre la Av. del Ejército y 13.55 m sobre la Av. Chorrillos. Por su tamaño y sus dos accesos se presta para vivienda, hospedaje o restaurante.",
+    specs:[["Área","2,382.71 m²"],["Frentes","2 avenidas"],["Av. del Ejército","66.70 m"],["Av. Chorrillos","13.55 m"]],
+    near:[["Playa Chorrillos","~90 m"],["Plaza de Armas de Barranca","~1.5 km"],["Panamericana Norte","~3 km"],["Lima","~190 km"]],
+    // Plano perimétrico: 13 vértices, área 2,382.71 m², perímetro 274.10 m (redibujado de las medidas del plano)
+    area:"2,382.71 m²", perimeter:"274.10 m",
+    sides:[13.55,41.75,6.27,8.33,14.30,19.00,26.79,39.91,25.91,17.24,6.18,14.50,40.37],
+    streets:{0:"AV. CHORRILLOS",6:"AV. DEL EJÉRCITO",7:"AV. DEL EJÉRCITO"},
+    poly:[[-30.53,-29.58],[-39.15,-19.13],[-7.99,8.66],[-11.21,14.03],[-4.88,19.45],[-11.54,32.11],[5.16,41.18],[19.12,18.32],[41.36,-14.82],[22.49,-32.57],[10.73,-19.96],[6.94,-15.08],[-0.49,-2.62]],
+    boundary:[[-10.7604638,-77.7644023],[-10.7603693,-77.7644811],[-10.7601180,-77.7641962],[-10.7600694,-77.7642257],[-10.7600204,-77.7641678],[-10.7599059,-77.7642286],[-10.7598238,-77.7640760],[-10.7600306,-77.7639483],[-10.7603303,-77.7637449],[-10.7604908,-77.7639175],[-10.7603768,-77.7640251],[-10.7603327,-77.7640597],[-10.7602200,-77.7641276]] },
   { id:"DASO-B02", scene:"ovalo", kind:"Comercial", city:"Barranca", region:"Lima",
     title:"Terreno comercial en la entrada de Barranca", short:"Segundo óvalo",
     zone:"Segundo óvalo, entrada de Barranca · Los Arenales", lat:-10.7430290, lng:-77.7486280,
@@ -724,6 +730,7 @@ document.querySelectorAll("svg.mark").forEach(svg=>drawMark(svg));
    ========================================================= */
 const IMG = {}; // IMG[id] = {day, dusk, aerial, plan}
 function planSVG(p){
+  if(p.poly) return polyPlanSVG(p);
   const W=800,H=500; let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}"><rect width="${W}" height="${H}" fill="#2B241D"/>`;
   s+=`<g stroke="#3B3128" stroke-width="1">`; for(let x=0;x<=W;x+=25) s+=`<line x1="${x}" y1="0" x2="${x}" y2="${H}"/>`; for(let y=0;y<=H;y+=25) s+=`<line x1="0" y1="${y}" x2="${W}" y2="${y}"/>`; s+=`</g>`;
   const k=Math.min(520/p.depth, 300/p.front), w=p.depth*k, h=p.front*k, x=(W-w)/2, y=(H-h)/2;
@@ -739,6 +746,31 @@ function planSVG(p){
   s+=`<g stroke="#EDE3D2"><line x1="${x}" y1="${y+h+18}" x2="${x+w}" y2="${y+h+18}"/><line x1="${x}" y1="${y+h+12}" x2="${x}" y2="${y+h+24}"/><line x1="${x+w}" y1="${y+h+12}" x2="${x+w}" y2="${y+h+24}"/></g>`;
   s+=`<g transform="translate(${W-60},60)"><circle r="20" fill="none" stroke="#EDE3D2"/><path d="M0 -15 L6 5 L0 0 L-6 5Z" fill="#E6CC94"/><text y="-28" text-anchor="middle" fill="#EDE3D2" font-family="monospace" font-size="12">N</text></g>`;
   s+=`<text x="24" y="${H-22}" fill="#B3A591" font-family="monospace" font-size="12">${p.id} · PLANO REFERENCIAL</text>`;
+  return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(s+"</svg>");
+}
+// plano exacto a partir de las medidas del plano perimétrico (norte arriba)
+function polyPlanSVG(p){
+  const W=900,H=600, P=p.poly, xs=P.map(q=>q[0]), ys=P.map(q=>q[1]);
+  const minx=Math.min(...xs),maxx=Math.max(...xs),miny=Math.min(...ys),maxy=Math.max(...ys);
+  const k=Math.min(560/(maxx-minx),430/(maxy-miny)), ox=(W-(maxx-minx)*k)/2-minx*k-40, oy=(H-(maxy-miny)*k)/2+maxy*k+10;
+  const X=q=>ox+q[0]*k, Y=q=>oy-q[1]*k;
+  let s=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}"><rect width="${W}" height="${H}" fill="#FBF8F3"/>`;
+  s+=`<g stroke="#ECE3D5" stroke-width="1">`; for(let x=0;x<=W;x+=30) s+=`<line x1="${x}" y1="0" x2="${x}" y2="${H}"/>`; for(let y=0;y<=H;y+=30) s+=`<line x1="0" y1="${y}" x2="${W}" y2="${y}"/>`; s+=`</g>`;
+  s+=`<polygon points="${P.map(q=>X(q).toFixed(1)+","+Y(q).toFixed(1)).join(" ")}" fill="#C29A52" fill-opacity=".16" stroke="#2B241D" stroke-width="2.5" stroke-linejoin="round"/>`;
+  const F='font-family="Montserrat,Verdana,sans-serif"';
+  P.forEach((a,i)=>{ const b=P[(i+1)%P.length], mx=(X(a)+X(b))/2, my=(Y(a)+Y(b))/2, dx=X(b)-X(a), dy=Y(b)-Y(a), len=Math.hypot(dx,dy);
+    // polígono en sentido horario: el exterior queda a la izquierda del recorrido
+    const nx=dy/len, ny=-dx/len; let ang=Math.atan2(dy,dx)*180/Math.PI; if(ang>90) ang-=180; if(ang<-90) ang+=180;
+    const off=len<60?30:len<110?22:16, tx=mx+nx*off, ty=my+ny*off;
+    s+=`<text x="${tx.toFixed(1)}" y="${ty.toFixed(1)}" transform="rotate(${ang.toFixed(1)} ${tx.toFixed(1)} ${ty.toFixed(1)})" text-anchor="middle" dominant-baseline="middle" ${F} font-size="14" font-weight="700" fill="#2B241D">${p.sides[i].toFixed(2)} m</text>`;
+    if(p.streets[i]){ const sx=mx+nx*48, sy=my+ny*48; s+=`<text x="${sx.toFixed(1)}" y="${sy.toFixed(1)}" transform="rotate(${ang.toFixed(1)} ${sx.toFixed(1)} ${sy.toFixed(1)})" text-anchor="middle" dominant-baseline="middle" ${F} font-size="13" font-weight="700" letter-spacing="2" fill="#977543">${p.streets[i]}</text>`; }
+  });
+  P.forEach((a,i)=>{ s+=`<circle cx="${X(a).toFixed(1)}" cy="${Y(a).toFixed(1)}" r="4" fill="#2B241D"/>`; });
+  const bx=W-230, by=H-150;
+  s+=`<g ${F}><rect x="${bx}" y="${by}" width="200" height="104" rx="10" fill="#fff" stroke="#2B241D"/><text x="${bx+18}" y="${by+30}" font-size="12" font-weight="700" fill="#6F6458">ÁREA</text><text x="${bx+18}" y="${by+56}" font-size="24" font-weight="800" fill="#2B241D">${p.area}</text><text x="${bx+18}" y="${by+84}" font-size="13" font-weight="600" fill="#2B241D">Perímetro: ${p.perimeter}</text></g>`;
+  s+=`<g transform="translate(${W-60},62)" ${F}><circle r="22" fill="#fff" stroke="#2B241D"/><path d="M0 -16 L7 6 L0 1 L-7 6Z" fill="#977543"/><text y="-30" text-anchor="middle" font-size="13" font-weight="700" fill="#2B241D">N</text></g>`;
+  const sb=20*k; s+=`<g ${F}><line x1="30" y1="${H-40}" x2="${30+sb}" y2="${H-40}" stroke="#2B241D" stroke-width="3"/><line x1="30" y1="${H-47}" x2="30" y2="${H-33}" stroke="#2B241D" stroke-width="2"/><line x1="${30+sb}" y1="${H-47}" x2="${30+sb}" y2="${H-33}" stroke="#2B241D" stroke-width="2"/><text x="${30+sb/2}" y="${H-52}" text-anchor="middle" font-size="12" font-weight="700" fill="#2B241D">20 m</text>`;
+  s+=`<text x="30" y="${H-14}" font-size="12" fill="#6F6458">${p.id} · Redibujado del plano perimétrico</text></g>`;
   return "data:image/svg+xml;charset=utf-8,"+encodeURIComponent(s+"</svg>");
 }
 const PH="data:image/svg+xml;charset=utf-8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500"><rect width="800" height="500" fill="#2B241D"/><text x="400" y="256" text-anchor="middle" fill="#A2968A" font-family="monospace" font-size="14" letter-spacing="3">GENERANDO MAQUETA 3D…</text></svg>');
@@ -1176,7 +1208,12 @@ function initCesium(){
       label:{text:`${p.short}\n${priceTxt(p)}`,font:"700 15px Montserrat, Verdana, sans-serif",fillColor:C.Color.WHITE,showBackground:true,backgroundColor:dark,
         backgroundPadding:new C.Cartesian2(12,8),pixelOffset:new C.Cartesian2(0,-20),verticalOrigin:C.VerticalOrigin.BOTTOM,
         heightReference:C.HeightReference.CLAMP_TO_GROUND,disableDepthTestDistance:Number.POSITIVE_INFINITY},
-      ellipse:{semiMajorAxis:40,semiMinorAxis:40,material:brass.withAlpha(.28)} });
+      ellipse:p.boundary?undefined:{semiMajorAxis:40,semiMinorAxis:40,material:brass.withAlpha(.28)} });
+    if(p.boundary){
+      const flat=p.boundary.flatMap(([la,lo])=>[lo,la]);
+      viewer.entities.add({polygon:{hierarchy:C.Cartesian3.fromDegreesArray(flat),material:brass.withAlpha(.35),classificationType:C.ClassificationType.BOTH}});
+      viewer.entities.add({polyline:{positions:C.Cartesian3.fromDegreesArray(flat.concat(flat.slice(0,2))),width:3,material:brass,clampToGround:true}});
+    }
   });
   viewer.camera.setView({destination:C.Cartesian3.fromDegrees(-76.5,-12.5,9000000)});
   let orbit=null, active=null, first=true;
@@ -1197,7 +1234,7 @@ function initCesium(){
   selectProp=(id,fly)=>{
     const p=PROPS.find(q=>q.id===id); if(!p) return; active=p;
     Object.entries(ents).forEach(([k,e])=>e.label.backgroundColor=k===id?C.Color.fromCssColorString("#977543"):dark);
-    if(fly){ flyTo(p.lng,p.lat,900,-32,first?4.5:2.6,true); first=false; }
+    if(fly){ flyTo(p.lng,p.lat,p.boundary?420:900,p.boundary?-48:-32,first?4.5:2.6,true); first=false; }
     $("#hudCoords").textContent=`${p.short.toUpperCase()} · ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
     renderPanel(p);
   };
