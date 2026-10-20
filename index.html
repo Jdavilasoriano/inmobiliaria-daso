@@ -156,6 +156,35 @@ img{display:block}
 .circle:hover{background:rgba(30,24,18,.55)}
 .circle svg{width:18px;height:18px}
 
+.picks-head{display:flex;justify-content:space-between;align-items:end;gap:12px 32px;flex-wrap:wrap;margin-top:64px;padding-bottom:22px;border-bottom:1px solid var(--line)}
+.picks-head h2{font-size:clamp(30px,3.4vw,46px);display:flex;align-items:center;gap:14px}
+.picks-count{display:inline-grid;place-items:center;width:1.35em;height:1.35em;border-radius:50%;background:var(--ink);color:#fff;font-size:.8em}
+.picks-head p{font-size:18px;color:var(--muted);max-width:46ch}
+.picks-head p b{color:var(--ink)}
+.picks{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:32px}
+@media (max-width:860px){.picks{grid-template-columns:1fr}}
+.pick{border:1px solid var(--line);border-radius:24px;overflow:hidden;background:var(--surface);display:flex;flex-direction:column;box-shadow:var(--shadow);min-width:0}
+.pick-img{position:relative;aspect-ratio:16/9;max-width:100%;background:var(--surface-2)}
+.pick-img img{width:100%;height:100%;object-fit:cover}
+.pick-n,.pick-kind{position:absolute;top:16px;font-family:var(--f-display);font-weight:700;font-size:15px;padding:8px 14px;border-radius:999px}
+.pick-n{left:16px;background:var(--ink);color:#fff}
+.pick-kind{right:16px;background:#fff;color:var(--ink)}
+.pick-ref{position:absolute;right:14px;bottom:12px;font-size:12px;font-weight:700;color:#fff;background:rgba(30,24,18,.5);padding:4px 9px;border-radius:5px}
+.pick-body{padding:26px 28px 28px;display:grid;gap:16px;flex:1}
+.pick h3{font-size:clamp(24px,2.2vw,30px)}
+.pick-loc{display:flex;gap:8px;color:var(--muted);font-size:16px}
+.pick-loc svg{width:16px;height:16px;color:var(--brass);flex:none;margin-top:4px}
+.pick-specs{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.pick-specs div{padding:12px 10px 12px 0;min-width:0}
+.pick-specs div+div{border-left:1px solid var(--line);padding-left:14px}
+.pick-specs small{display:block;font-size:13px;font-weight:700;color:var(--muted)}
+.pick-specs b{font-family:var(--f-display);font-size:18px}
+@media (max-width:520px){.pick-specs{grid-template-columns:1fr}.pick-specs div{display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:10px 0}.pick-specs div+div{border-left:0;border-top:1px solid var(--line);padding-left:0}.pick-body{padding:22px}}
+.pick-foot{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap;margin-top:auto}
+.pick-foot small{display:block;font-size:13px;font-weight:700;color:var(--muted)}
+.pick-foot .p{font-family:var(--f-display);font-weight:800;font-size:32px;letter-spacing:-.02em;line-height:1.1}
+.pick-actions{display:flex;gap:8px;flex-wrap:wrap}
+.sep{display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;color:var(--ink);background:var(--brass-soft);border-radius:999px;padding:6px 12px;width:fit-content}
 .facts-band{background:var(--surface-2);margin-top:72px}
 .facts{display:grid;grid-template-columns:repeat(4,1fr)}
 .facts div{padding-block:34px!important}
@@ -203,6 +232,7 @@ section{padding-block:128px}
 .estate-price small{display:block;font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
 .estate-actions{display:flex;flex-wrap:wrap;gap:10px}
 .estate[hidden]{display:none!important}
+.filters[hidden],[hidden]{display:none!important}
 .filters{display:flex;flex-wrap:wrap;gap:16px 44px;margin:-28px 0 72px;padding-bottom:24px;border-bottom:1px solid var(--line)}
 .fgroup{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
 .fgroup>span{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
@@ -425,28 +455,26 @@ h3{font-weight:700;letter-spacing:-.015em}
           <h1 class="rise" style="--d:.15s;margin-top:22px">Terrenos para invertir <em>con los pies en la tierra</em></h1>
         </div>
         <div class="hero-side">
-          <p class="hero-sub rise" style="--d:.3s">Hoy vendemos en Barranca, Norte Chico: un terreno de playa en Chorrillos y uno comercial en la entrada de la ciudad. Pronto, más ubicaciones en Lima y el Perú.</p>
+          <p class="hero-sub rise" style="--d:.3s">Inmobiliaria familiar con terrenos propios en Barranca, Norte Chico. Pronto, más ubicaciones en Lima y el Perú.</p>
           <div class="hero-cta rise" style="--d:.42s">
-            <a class="btn btn-ink" href="#terrenos">Ver terrenos</a>
+            <a class="btn btn-ink" href="#en-venta">Ver los 2 terrenos</a>
             <a class="btn btn-line" href="#invertir">Por qué invertir</a>
           </div>
         </div>
       </div>
 
-      <div class="show rise" style="--d:.5s" id="show" tabindex="0" aria-roledescription="carrusel" aria-label="Terrenos destacados">
-        <div class="show-bars" id="showBars"></div>
-        <div class="show-nav">
-          <button class="circle" type="button" id="showPrev" aria-label="Anterior"><svg><use href="#i-l"/></svg></button>
-          <button class="circle" type="button" id="showNext" aria-label="Siguiente"><svg><use href="#i-r"/></svg></button>
-        </div>
+      <div class="picks-head rise" style="--d:.45s" id="en-venta">
+        <h2><span class="picks-count">2</span> terrenos en venta</h2>
+        <p><b>Cada terreno se vende por separado</b>, con su propio precio y documentos. Elige el que te interesa.</p>
       </div>
+      <div class="picks rise" style="--d:.55s" id="picks"></div>
     </div>
   </div>
 
   <div class="facts-band"><div class="wrap">
       <div class="facts">
         <div><b>2</b><span>terrenos disponibles en Barranca</span></div>
-        <div><b>Playa y comercio</b><span>un lote para cada tipo de proyecto</span></div>
+        <div><b>Por separado</b><span>cada terreno tiene su propio precio</span></div>
         <div><b>~190 km</b><span>de Lima por la Panamericana Norte</span></div>
         <div><b>Directo</b><span>con la familia propietaria</span></div>
       </div>
@@ -456,8 +484,8 @@ h3{font-weight:700;letter-spacing:-.015em}
   <section id="terrenos">
     <div class="wrap">
       <div class="sec-head">
-        <div><span class="eyebrow">Catálogo</span><h2>Terrenos disponibles</h2></div>
-        <p>Filtra por ubicación o por tipo. Cada ficha trae fotos de la zona, una maqueta 3D del entorno y el plano con medidas.</p>
+        <div><span class="eyebrow">Detalle</span><h2>Conoce cada terreno</h2></div>
+        <p>Fotos de la zona, maqueta 3D, plano con medidas y precio de cada terreno. Recuerda: se venden por separado.</p>
       </div>
       <div class="filters" role="group" aria-label="Filtrar terrenos">
         <div class="fgroup"><span>Ubicación</span><div class="chips" id="fLoc"></div></div>
@@ -900,27 +928,26 @@ addEventListener("keydown",e=>{ if(["Escape","Enter"," "].includes(e.key) && $("
 $("#replay").addEventListener("click",()=>{ scrollTo({top:0}); playIntro(); });
 
 /* =========================================================
-   SHOWCASE (carrusel principal)
+   LOS TERRENOS EN VENTA (tarjetas separadas)
    ========================================================= */
-const show=$("#show"); let sIdx=0, sStart=0; const SDUR=6500, REDUCE=matchMedia("(prefers-reduced-motion: reduce)").matches;
-PROPS.forEach((p,i)=>{
-  const s=document.createElement("div"); s.className="slide";
-  s.innerHTML=`<img src="${IMG[p.id].photo}" alt="Foto referencial de la zona: ${esc(p.title)}">
-  <div class="slide-info"><div><span class="eyebrow">${esc(p.zone)} · foto referencial</span><h2>${esc(p.title)}</h2><p>${esc(p.desc)}</p></div>
-  <div class="slide-price"><div><small>${p.from?"Precio por lote":"Precio de venta"}</small><span class="p">${priceTxt(p)}</span></div>
-  <div class="row"><a class="btn btn-light" href="#${p.id}">Ver ficha</a><a class="btn btn-wa" href="${waLink(DASO.agents[0].number,msgFor(p))}" target="_blank" rel="noopener" aria-label="WhatsApp"><svg><use href="#i-wa"/></svg></a></div></div></div>`;
-  show.insertBefore(s, $("#showBars"));
-  const b=document.createElement("button"); b.type="button"; b.innerHTML=`<i></i><span>${String(i+1).padStart(2,"0")} · ${esc(p.short)}</span>`; b.onclick=()=>goSlide(i); $("#showBars").appendChild(b);
-});
-const slides=[...show.querySelectorAll(".slide")], bars=[...$("#showBars").children];
-function goSlide(i){ sIdx=(i+slides.length)%slides.length; slides.forEach((s,k)=>s.classList.toggle("on",k===sIdx)); bars.forEach((b,k)=>{ b.classList.toggle("on",k===sIdx); b.firstChild.style.width=k<sIdx?"100%":"0"; }); sStart=performance.now(); }
-(function tick(now){ requestAnimationFrame(tick); if(!document.body.classList.contains("ready")){ sStart=now; return; }
-  const k=Math.min(1,(now-sStart)/SDUR); bars[sIdx].firstChild.style.width=(k*100)+"%";
-  if(k>=1){ if(show.matches(":hover")||show.matches(":focus-within")||REDUCE) sStart=now-SDUR*.999; else goSlide(sIdx+1); } })(performance.now());
-show.addEventListener("keydown",e=>{ if(e.key==="ArrowRight") goSlide(sIdx+1); if(e.key==="ArrowLeft") goSlide(sIdx-1); });
-$("#showPrev").onclick=()=>goSlide(sIdx-1); $("#showNext").onclick=()=>goSlide(sIdx+1);
-let shx=null; show.addEventListener("pointerdown",e=>shx=e.clientX); show.addEventListener("pointerup",e=>{ if(shx!==null&&Math.abs(e.clientX-shx)>50) goSlide(sIdx+(e.clientX<shx?1:-1)); shx=null; });
-goSlide(0);
+const nTxt=(p)=>`Terreno ${PROPS.indexOf(p)+1}`;
+$("#picks").innerHTML=PROPS.map(p=>`
+  <article class="pick" aria-label="${nTxt(p)}: ${esc(p.title)}">
+    <div class="pick-img"><img src="${IMG[p.id].photo}" alt="Foto referencial de la zona: ${esc(p.title)}"><span class="pick-n">${nTxt(p)}</span><span class="pick-kind">${esc(p.kind)}</span><span class="pick-ref">Foto referencial</span></div>
+    <div class="pick-body">
+      <span class="sep">Se vende por separado</span>
+      <h3>${esc(p.title)}</h3>
+      <span class="pick-loc"><svg><use href="#i-pin"/></svg>${esc(p.zone)}</span>
+      <div class="pick-specs">${p.specs.slice(0,3).map(([k,v])=>`<div><small>${k}</small><b>${v}</b></div>`).join("")}</div>
+      <div class="pick-foot">
+        <div><small>${p.from?"Precio por lote":"Precio de este terreno"}</small><span class="p">${priceTxt(p)}</span></div>
+        <div class="pick-actions">
+          <a class="btn btn-ink" href="#${p.id}">Ver detalles</a>
+          <a class="btn btn-wa" href="${waLink(DASO.agents[0].number,msgFor(p))}" target="_blank" rel="noopener" aria-label="Consultar por WhatsApp sobre ${esc(p.title)}"><svg><use href="#i-wa"/></svg>Consultar</a>
+        </div>
+      </div>
+    </div>
+  </article>`).join("");
 
 /* =========================================================
    FICHAS de cada terreno
@@ -933,8 +960,9 @@ $("#estates").innerHTML=PROPS.map(p=>`
       <div class="views" role="tablist">${VIEWS(p).map(([k,l],i)=>`<button type="button" role="tab" aria-selected="${!i}" class="${i?"":"on"}" data-view="${p.id}:${k}">${l}</button>`).join("")}</div>
     </div>
     <div class="estate-info">
-      <span class="eyebrow">${p.id} · Terreno ${p.kind.toLowerCase()} · ${esc(p.city)}, ${esc(p.region)}</span>
+      <span class="eyebrow">${nTxt(p)} de ${PROPS.length} · ${esc(p.kind)} · ${esc(p.city)}</span>
       <h3>${esc(p.title)}</h3>
+      <span class="sep">Se vende por separado</span>
       <span class="estate-loc"><svg><use href="#i-pin"/></svg>${esc(p.zone)}</span>
       <p class="desc">${esc(p.desc)}</p>
       <div class="spec">${p.specs.map(([k,v])=>`<div><small>${k}</small><b>${v}</b></div>`).join("")}</div>
@@ -950,7 +978,7 @@ document.addEventListener("click",e=>{ const r=e.target.closest(".ref"); if(r) d
 const filt={loc:"all",kind:"all"};
 function chipsHTML(key,vals){ return [["all","Todas"],...vals.map(v=>[v,v])].map(([v,l])=>{ const n=v==="all"?PROPS.length:PROPS.filter(p=>(key==="loc"?p.city:p.kind)===v).length;
   return `<button type="button" class="chip ${filt[key]===v?"on":""}" aria-pressed="${filt[key]===v}" data-f="${key}:${v}">${key==="kind"&&v==="all"?"Todos":esc(l)}<small>${n}</small></button>`; }).join(""); }
-function renderFilters(){ $("#fLoc").innerHTML=chipsHTML("loc",[...new Set(PROPS.map(p=>p.city))]); $("#fKind").innerHTML=chipsHTML("kind",[...new Set(PROPS.map(p=>p.kind))]); }
+function renderFilters(){ document.querySelector(".filters").hidden=PROPS.length<=3; $("#fLoc").innerHTML=chipsHTML("loc",[...new Set(PROPS.map(p=>p.city))]); $("#fKind").innerHTML=chipsHTML("kind",[...new Set(PROPS.map(p=>p.kind))]); }
 function applyFilters(){ let n=0; document.querySelectorAll(".estate").forEach(el=>{ const ok=(filt.loc==="all"||el.dataset.loc===filt.loc)&&(filt.kind==="all"||el.dataset.kind===filt.kind); el.hidden=!ok; if(ok) n++; });
   let nr=$("#estates .nores"); if(!n&&!nr){ nr=document.createElement("p"); nr.className="nores"; nr.textContent="No hay terrenos con esa combinación por ahora."; $("#estates").appendChild(nr); } if(nr) nr.hidden=n>0; renderFilters(); }
 document.querySelector(".filters").addEventListener("click",e=>{ const b=e.target.closest("[data-f]"); if(!b) return; const [k,v]=b.dataset.f.split(":"); filt[k]=v; applyFilters(); });
@@ -971,11 +999,11 @@ document.querySelectorAll('[data-wa="general"]').forEach(a=>a.href=waLink(DASO.a
 let pendingSel=null;
 let selectProp=id=>{ const p=PROPS.find(q=>q.id===id); if(!p) return; pendingSel=id; renderPanel(p); };
 function renderPanel(p){
-  $("#mapPanel").innerHTML=`<span class="eyebrow">${p.id}</span>
+  $("#mapPanel").innerHTML=`<span class="eyebrow">${nTxt(p)} de ${PROPS.length} · ${esc(p.kind)}</span>
     <h3>${esc(p.title)}</h3>
     <div class="coords"><span>${dms(p.lat,"N","S")}</span><span>${dms(p.lng,"E","O")}</span></div>
     <ul class="near">${p.near.map(([a,b])=>`<li><span>${a}</span><b>${b}</b></li>`).join("")}</ul>
-    <div class="map-list">${PROPS.map(q=>`<button type="button" class="${q.id===p.id?"on":""}" data-sel="${q.id}">${esc(q.short)}<span>${priceTxt(q)}</span></button>`).join("")}</div>
+    <div class="map-list">${PROPS.map(q=>`<button type="button" class="${q.id===p.id?"on":""}" data-sel="${q.id}">${nTxt(q)} · ${esc(q.short)}<span>${priceTxt(q)}</span></button>`).join("")}</div>
     <div class="panel-actions">
       <a class="btn btn-ink" href="#${p.id}">Ver ficha</a>
       <a class="btn btn-line" href="https://www.google.com/maps?q=${p.lat},${p.lng}" target="_blank" rel="noopener">Google Maps</a>
