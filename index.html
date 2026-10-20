@@ -967,7 +967,9 @@ document.querySelectorAll('[data-wa="general"]').forEach(a=>a.href=waLink(DASO.a
 /* =========================================================
    MAQUETA 3D DE BARRANCA
    ========================================================= */
-let selectProp=()=>{};
+// hasta que el mapa cargue, recordamos qué terreno pidió la persona
+let pendingSel=null;
+let selectProp=id=>{ const p=PROPS.find(q=>q.id===id); if(!p) return; pendingSel=id; renderPanel(p); };
 function renderPanel(p){
   $("#mapPanel").innerHTML=`<span class="eyebrow">${p.id}</span>
     <h3>${esc(p.title)}</h3>
@@ -1109,7 +1111,7 @@ function initMaqueta(){
     LMS.forEach(l=>place(l.el,l.v,W,H,8));
     renderer.render(scene,camera);
   })();
-  if(!pins.some(q=>q.lab.classList.contains("on"))) selectProp(PROPS[0].id,false);
+  if(!pins.some(q=>q.lab.classList.contains("on"))) selectProp(pendingSel||PROPS[0].id,!!pendingSel);
 }
 
 /* =========================================================
@@ -1179,7 +1181,7 @@ function initCesium(){
   $("#zIn").onclick=()=>{ if(orbit) orbit.r=Math.max(150,orbit.r*.7); else viewer.camera.zoomIn(viewer.camera.positionCartographic.height*.35); };
   $("#zOut").onclick=()=>{ if(orbit) orbit.r=Math.min(20000,orbit.r*1.4); else viewer.camera.zoomOut(viewer.camera.positionCartographic.height*.5); };
   $("#mapReset").onclick=overview;
-  selectProp(PROPS[0].id,false);
+  selectProp(pendingSel||PROPS[0].id,false);
   // el vuelo desde el espacio empieza cuando el mapa está realmente en pantalla
   new IntersectionObserver((es,o)=>{ if(es[0].isIntersecting){ o.disconnect(); selectProp(active?active.id:PROPS[0].id,true); } },{threshold:.4}).observe(box);
 }
