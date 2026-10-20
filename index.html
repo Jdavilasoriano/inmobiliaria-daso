@@ -828,7 +828,50 @@ function buildPropScene(p){
     box(w+.4,.35,d+.4,M.paint,x,y0+H,z);
   };
   let cams, sunPos;
-  if(p.scene==="playa" || p.scene==="hotel"){
+  if(p.poly){
+    // Escena real: mar → playa → Av. Chorrillos → terreno en "T" (plano perimétrico) → Av. del Ejército → ciudad
+    const P=p.poly, n=P.length;
+    // girar para que el lado 1-2 (frente a Av. Chorrillos) quede paralelo a la vía y la "T" crezca tierra adentro (+x)
+    const vx=P[1][0]-P[0][0], vy=P[1][1]-P[0][1];
+    let rot=Math.PI/2-Math.atan2(vy,vx);
+    const turn=(r)=>P.map(([u,w])=>[u*Math.cos(r)-w*Math.sin(r), u*Math.sin(r)+w*Math.cos(r)]);
+    let Q=turn(rot); const mid=[(Q[0][0]+Q[1][0])/2,(Q[0][1]+Q[1][1])/2];
+    if(mid[0]>0){ rot+=Math.PI; Q=turn(rot); }
+    // a coordenadas de escena (x tierra adentro, z a lo largo de la costa); sin espejo
+    let V=Q.map(([u,w])=>[u,-w]);
+    const minX=Math.min(...V.map(v=>v[0])), maxX=Math.max(...V.map(v=>v[0])), cz=(Math.min(...V.map(v=>v[1]))+Math.max(...V.map(v=>v[1])))/2;
+    V=V.map(([x,z])=>[x-minX-11,z-cz]);
+    const lotMaxX=maxX-minX-11, EJ=lotMaxX+5.5;
+    const inLot=(x,z)=>{ let c=false; for(let i=0,j=n-1;i<n;j=i++){ const [xi,zi]=V[i],[xj,zj]=V[j]; if(((zi>z)!==(zj>z))&&(x<(xj-xi)*(z-zi)/(zj-zi)+xi)) c=!c; } return c; };
+    const nearLot=(x,z,w,d)=>[[0,0],[-w/2,-d/2],[w/2,-d/2],[-w/2,d/2],[w/2,d/2],[0,-d/2],[0,d/2],[-w/2,0],[w/2,0]].some(([a,b])=>inLot(x+a,z+b));
+    plane(800,800,M.earth,0,0,0);
+    plane(300,800,M.sea,-200,.08,0);
+    plane(40,800,M.sand,-42,.03,0); plane(6,800,M.wet,-60,.04,0);
+    box(.7,.02,800,M.foam,-62.5,.07,0); box(.5,.02,800,M.foam2,-70,.07,0);
+    // Av. Chorrillos (junto a la playa) y Av. del Ejército (atrás)
+    box(9,.06,800,M.asphalt,-16,0,0); box(1.6,.18,800,M.paint,-21.3,0,0); box(1.6,.18,800,M.paint,-10.7,0,0);
+    for(let z=-380;z<380;z+=10) box(.2,.02,4,M.paint,-16,.07,z);
+    box(10,.06,800,M.asphalt,EJ,0,0); box(1.6,.18,800,M.paint,EJ-5.8,0,0); box(1.6,.18,800,M.paint,EJ+5.8,0,0);
+    for(let z=-380;z<380;z+=10) box(.2,.02,4,M.paint,EJ,.07,z);
+    // el terreno: forma exacta, borde bronce y estacas en los 13 vértices
+    const shp=new THREE.Shape(); V.forEach(([x,z],i)=>i?shp.lineTo(x,-z):shp.moveTo(x,-z));
+    const lg=new THREE.ExtrudeGeometry(shp,{depth:.14,bevelEnabled:false}); lg.rotateX(-Math.PI/2);
+    const lm=new THREE.Mesh(lg,M.lotTop); lm.receiveShadow=true; S.add(lm);
+    V.forEach(([x1,z1],i)=>{ const [x2,z2]=V[(i+1)%n], len=Math.hypot(x2-x1,z2-z1);
+      const e=box(len,.45,.25,M.brass,(x1+x2)/2,0,(z1+z2)/2); e.rotation.y=-Math.atan2(z2-z1,x2-x1);
+      add(new THREE.CylinderGeometry(.16,.16,2.6,8),M.brass,x1,1.3,z1); box(.9,.5,.04,M.flag,x1+.45,2.0,z1); });
+    // vecinos entre las dos avenidas (sin invadir el terreno) y ciudad detrás
+    let k=0;
+    for(let x=-5.5;x<lotMaxX-3;x+=9.5) for(let z=-150;z<150;z+=10.5){ k++; const w=8.2,d=9; if(nearLot(x,z,w+.8,d+.8)) continue; if(rnd(k)<.06) continue;
+      building(x,z,w,d,1+Math.floor(rnd(k+3)*2),{mat:rnd(k+5)>.5?M.concrete:M.beige,west:x<10,south:false}); }
+    for(let x=EJ+12;x<EJ+120;x+=12) for(let z=-170;z<170;z+=13){ k++; if(rnd(k)<.15) continue;
+      building(x,z,9+rnd(k+2)*2,10,1+Math.floor(rnd(k+7)*3),{mat:rnd(k+5)>.5?M.concrete:M.beige,south:false,west:x<EJ+30}); }
+    for(let i=0;i<9;i++) palm(-22.6,-80+i*20+rnd(i)*4,.85);
+    const car=(x,z,m,r=0)=>{ const c=box(1.9,1.4,4.3,m,x,.1,z); c.rotation.y=r; }; car(-18.5,-30,M.car1); car(-13.5,24,M.car3); car(EJ-2.5,-12,M.car2); car(EJ+2.5,40,M.car1);
+    const cx=(lotMaxX-11)/2;
+    cams={ day:{pos:[cx-75,100,85],look:[cx+10,0,2]}, dusk:{pos:[cx-110,34,-86],look:[cx,2,0]}, aerial:{pos:[cx+12,150,.01],look:[cx+12,0,0]} };
+    sunPos={ day:[-50,95,60], dusk:[-180,26,-30] };
+  } else if(p.scene==="playa" || p.scene==="hotel"){
     const hotel=p.scene==="hotel";
     plane(600,600,M.sand,0,0,0);
     plane(8,600,M.wet,-34,.02,0);
