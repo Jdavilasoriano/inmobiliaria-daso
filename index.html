@@ -248,6 +248,10 @@ section{padding-block:128px}
 .map-box{position:relative;border-radius:24px;overflow:hidden;background:var(--map-bg);min-height:600px;min-width:0;touch-action:pan-y}
 @media (max-width:600px){.map-box{min-height:480px}}
 .map-box canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+#cesiumHost{position:absolute;inset:0}
+#cesiumHost .cesium-viewer,#cesiumHost .cesium-widget{width:100%;height:100%}
+#cesiumHost .cesium-widget canvas{position:static}
+#cesiumHost .cesium-widget-credits{font-size:10px!important;opacity:.85;left:auto!important;right:70px;bottom:6px!important}
 .map-box canvas:active{cursor:grabbing}
 .pin-label{position:absolute;left:0;top:0;background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:7px 11px;font-size:12.5px;font-weight:600;white-space:nowrap;box-shadow:0 10px 24px -14px rgba(0,0,0,.6);cursor:pointer;transition:background .2s,color .2s;will-change:transform}
 .pin-label small{display:block;font-family:var(--f-mono);font-weight:400;font-size:10px;color:var(--muted)}
@@ -538,8 +542,8 @@ h3{font-weight:700;letter-spacing:-.015em}
   <section class="map-sec" id="mapa">
     <div class="wrap">
       <div class="sec-head">
-        <div><span class="eyebrow">Ubicación en maqueta 3D</span><h2>Barranca, vista desde el aire</h2></div>
-        <p>Arrastra para girar. Elige un terreno y la cámara vuela hasta él: la playa, el acantilado, la ciudad y la Panamericana Norte en su sitio.</p>
+        <div><span class="eyebrow">Ubicación satelital 3D</span><h2>Mira dónde está cada terreno</h2></div>
+        <p>Imagen satelital real. Elige un terreno y la cámara baja hasta él. Arrastra para moverte y usa la rueda o dos dedos para acercarte.</p>
       </div>
       <div class="map-layout">
         <div class="map-box" id="mapBox">
@@ -642,7 +646,10 @@ const DASO = {
     { name: "Asesor 2 (nombre)", role: "Terreno comercial",       number: "51900000002", label: "+51 900 000 002" },
     { name: "Asesor 3 (nombre)", role: "Propietarios que venden", number: "51900000003", label: "+51 900 000 003" }
   ],
-  channel: "https://whatsapp.com/channel/TU-CANAL-AQUI"
+  channel: "https://whatsapp.com/channel/TU-CANAL-AQUI",
+  // Opcional: token gratuito de Cesium ion (https://ion.cesium.com) para relieve 3D y edificios.
+  // Sin token se usa la imagen satelital de Esri sobre un globo sin relieve.
+  cesiumToken: ""
 };
 const waLink = (num, text) => `https://wa.me/${num}?text=${encodeURIComponent(text)}`;
 
@@ -652,7 +659,7 @@ const waLink = (num, text) => `https://wa.me/${num}?text=${encodeURIComponent(te
 const PROPS = [
   { id:"DASO-B01", scene:"playa", kind:"Playa", city:"Barranca", region:"Lima",
     title:"Terreno de playa en Chorrillos, Barranca", short:"Playa Chorrillos",
-    zone:"Playa Chorrillos, Barranca", lat:-10.7560, lng:-77.7728,
+    zone:"Playa Chorrillos · Av. Costanera, Barranca", lat:-10.7633929, lng:-77.7611480,
     price:98000, front:15, depth:30, tag:"Frente al mar", photos:["img/b01-1.jpg","img/b02-1.jpg"], photo2:"La orilla",
     desc:"En la Playa Chorrillos de Barranca, al pie del acantilado y con vista abierta al Pacífico. Para casa de playa, restaurante u hospedaje en una de las playas más concurridas de la ciudad.",
     specs:[["Área","450 m²"],["Frente × fondo","15 × 30 m"],["Uso","Vivienda / comercio"],["Al mar","A pie de playa"]],
@@ -976,7 +983,7 @@ function renderPanel(p){
 $("#mapPanel").addEventListener("click",e=>{ const b=e.target.closest("[data-sel]"); if(b) selectProp(b.dataset.sel,true); });
 renderPanel(PROPS[0]);
 
-function initMap(){
+function initMaqueta(){
   const box=$("#mapBox"), canvas=$("#mapCanvas");
   if(!HAS3D){ box.insertAdjacentHTML("beforeend",`<div class="map-fallback">Tu navegador no puede mostrar la maqueta 3D.<br>Usa el botón “Google Maps” del panel.</div>`); return; }
   const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
@@ -1103,6 +1110,78 @@ function initMap(){
     renderer.render(scene,camera);
   })();
   if(!pins.some(q=>q.lab.classList.contains("on"))) selectProp(PROPS[0].id,false);
+}
+
+/* =========================================================
+   MAPA SATELITAL 3D con CesiumJS (respaldo: maqueta 3D)
+   ========================================================= */
+const CES_BASE="https://cdn.jsdelivr.net/npm/cesium@1.120.0/Build/Cesium/";
+function loadCesium(){
+  return new Promise((res,rej)=>{
+    if(window.Cesium) return res();
+    window.CESIUM_BASE_URL=CES_BASE;
+    const l=document.createElement("link"); l.rel="stylesheet"; l.href=CES_BASE+"Widgets/widgets.css"; document.head.appendChild(l);
+    const sc=document.createElement("script"); sc.src=CES_BASE+"Cesium.js"; sc.onload=()=>window.Cesium?res():rej(new Error("Cesium vacío")); sc.onerror=()=>rej(new Error("No cargó Cesium"));
+    document.head.appendChild(sc); setTimeout(()=>rej(new Error("Cesium tardó demasiado")),20000);
+  });
+}
+function initMap(){
+  if(!HAS3D){ initMaqueta(); return; }
+  loadCesium().then(initCesium).catch(e=>{ console.warn("Uso la maqueta 3D:",e.message); initMaqueta(); });
+}
+function initCesium(){
+  const C=Cesium, box=$("#mapBox");
+  $("#mapCanvas").hidden=true;
+  const host=document.createElement("div"); host.id="cesiumHost"; box.prepend(host);
+  const token=DASO.cesiumToken;
+  const opts={animation:false,timeline:false,baseLayerPicker:false,geocoder:false,homeButton:false,sceneModePicker:false,navigationHelpButton:false,
+    fullscreenButton:false,infoBox:false,selectionIndicator:false,scene3DOnly:true};
+  if(token){ C.Ion.defaultAccessToken=token; opts.terrain=C.Terrain.fromWorldTerrain(); }
+  else opts.baseLayer=C.ImageryLayer.fromProviderAsync(C.ArcGisMapServerImageryProvider.fromUrl("https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer"));
+  let viewer;
+  try{ viewer=new C.Viewer(host,opts); }catch(e){ host.remove(); $("#mapCanvas").hidden=false; console.warn(e); initMaqueta(); return; }
+  if(token) C.createOsmBuildingsAsync().then(b=>viewer.scene.primitives.add(b)).catch(()=>{});
+  const sc=viewer.scene; sc.globe.depthTestAgainstTerrain=false; sc.fog.enabled=true; sc.globe.showGroundAtmosphere=true;
+  const brass=C.Color.fromCssColorString("#C29A52"), dark=C.Color.fromCssColorString("rgba(43,36,29,.9)");
+  const ents={};
+  PROPS.forEach(p=>{
+    ents[p.id]=viewer.entities.add({ id:p.id, position:C.Cartesian3.fromDegrees(p.lng,p.lat),
+      point:{pixelSize:14,color:brass,outlineColor:C.Color.WHITE,outlineWidth:3,heightReference:C.HeightReference.CLAMP_TO_GROUND,disableDepthTestDistance:Number.POSITIVE_INFINITY},
+      label:{text:`${p.short}\n${priceTxt(p)}`,font:"700 15px Montserrat, Verdana, sans-serif",fillColor:C.Color.WHITE,showBackground:true,backgroundColor:dark,
+        backgroundPadding:new C.Cartesian2(12,8),pixelOffset:new C.Cartesian2(0,-20),verticalOrigin:C.VerticalOrigin.BOTTOM,
+        heightReference:C.HeightReference.CLAMP_TO_GROUND,disableDepthTestDistance:Number.POSITIVE_INFINITY},
+      ellipse:{semiMajorAxis:40,semiMinorAxis:40,material:brass.withAlpha(.28)} });
+  });
+  viewer.camera.setView({destination:C.Cartesian3.fromDegrees(-76.5,-12.5,9000000)});
+  let orbit=null, active=null, first=true;
+  const stopOrbit=()=>{ if(orbit){ orbit=null; viewer.camera.lookAtTransform(C.Matrix4.IDENTITY); } };
+  ["pointerdown","wheel","touchstart"].forEach(ev=>host.addEventListener(ev,stopOrbit,{passive:true}));
+  sc.preRender.addEventListener(()=>{
+    if(orbit){ orbit.h+=.0008; viewer.camera.lookAt(orbit.center,new C.HeadingPitchRange(orbit.h,orbit.p,orbit.r)); }
+    $("#compassNeedle").style.transform=`rotate(${-C.Math.toDegrees(viewer.camera.heading)}deg)`;
+  });
+  const flyTo=(lng,lat,range,pitch,dur,keepOrbit)=>{
+    stopOrbit(); const center=C.Cartesian3.fromDegrees(lng,lat,0), h=C.Math.toRadians(20), p=C.Math.toRadians(pitch);
+    viewer.camera.flyToBoundingSphere(new C.BoundingSphere(center,60),{offset:new C.HeadingPitchRange(h,p,range),duration:dur,
+      complete:()=>{ if(keepOrbit) orbit={center,h,p,r:range}; }});
+  };
+  const overview=()=>{ const lat=PROPS.reduce((a,p)=>a+p.lat,0)/PROPS.length, lng=PROPS.reduce((a,p)=>a+p.lng,0)/PROPS.length;
+    Object.values(ents).forEach(e=>e.label.backgroundColor=dark); active=null;
+    flyTo(lng,lat,5200,-55,2.4,false); $("#hudCoords").textContent="BARRANCA · VISTA GENERAL"; };
+  selectProp=(id,fly)=>{
+    const p=PROPS.find(q=>q.id===id); if(!p) return; active=p;
+    Object.entries(ents).forEach(([k,e])=>e.label.backgroundColor=k===id?C.Color.fromCssColorString("#977543"):dark);
+    if(fly){ flyTo(p.lng,p.lat,900,-32,first?4.5:2.6,true); first=false; }
+    $("#hudCoords").textContent=`${p.short.toUpperCase()} · ${p.lat.toFixed(5)}, ${p.lng.toFixed(5)}`;
+    renderPanel(p);
+  };
+  new C.ScreenSpaceEventHandler(sc.canvas).setInputAction(m=>{ const o=sc.pick(m.position); if(o&&o.id&&ents[o.id.id]) selectProp(o.id.id,true); },C.ScreenSpaceEventType.LEFT_CLICK);
+  $("#zIn").onclick=()=>{ if(orbit) orbit.r=Math.max(150,orbit.r*.7); else viewer.camera.zoomIn(viewer.camera.positionCartographic.height*.35); };
+  $("#zOut").onclick=()=>{ if(orbit) orbit.r=Math.min(20000,orbit.r*1.4); else viewer.camera.zoomOut(viewer.camera.positionCartographic.height*.5); };
+  $("#mapReset").onclick=overview;
+  selectProp(PROPS[0].id,false);
+  // el vuelo desde el espacio empieza cuando el mapa está realmente en pantalla
+  new IntersectionObserver((es,o)=>{ if(es[0].isIntersecting){ o.disconnect(); selectProp(active?active.id:PROPS[0].id,true); } },{threshold:.4}).observe(box);
 }
 
 /* =========================================================
